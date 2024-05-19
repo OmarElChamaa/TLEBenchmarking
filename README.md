@@ -1,8 +1,8 @@
 # TLEBenchmarking
 
-DB used : https://data.enseignementsup-recherche.gouv.fr/explore/dataset/fr-esr-referent-e-s-crous-etudiants-refugies-dans-les-universites/export/
-https://www.data.gouv.fr/fr/datasets/parrainages-des-candidats-a-lelection-presidentielle-francaise-de-2022/#/resources
-Download Format : Json
+DB used :
+ https://www.data.gouv.fr/fr/datasets/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-2nd-tour/
+Download Format : Xlsx
 
 Benchmarking Data : https://docs.google.com/spreadsheets/d/1jEePfGDo952euuNExDNVvgm3AfDgxZLdvHcJ7oRnYdc/edit#gid=0
 
@@ -11,6 +11,14 @@ Create docker and db
  docker pull mysql:latest
 docker run --name elections-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=elections_benchmark -p 10101:3306 -d mysql:latest
 ```
+
+Create couch and db
+```
+  docker pull couchdb
+  docker run -d --name elections-couchdb -e COUCHDB_USER=root -e COUCHDB_PASSWORD=root -p 5984:5984 couchdb
+
+```
+
 
 
 Pour ajouter et preparer une base de donnees :
