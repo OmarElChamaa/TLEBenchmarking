@@ -14,8 +14,9 @@ docker run --name elections-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=
 
 Create couch and db
 ```
-  docker pull couchdb
-  docker run -d --name elections-couchdb -e COUCHDB_USER=root -e COUCHDB_PASSWORD=root -p 5984:5984 couchdb
+  docker pull couchdb:latest
+docker run -d --name elections-couchdb -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=password -p 5984:5984 couchdb:latest
+
 
 ```
 

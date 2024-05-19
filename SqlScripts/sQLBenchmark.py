@@ -25,8 +25,7 @@ def insertValue(cursor, row):
         row['% Nuls/Ins'], row['% Nuls/Vot'], row['Exprimés'], row['% Exp/Ins'], row['% Exp/Vot'], row['N°Panneau'],
         row['Sexe'], row['Nom'], row['Prénom'], row['Voix'], row['% Voix/Ins'], row['% Voix/Exp']
     ))
-    return time.time()-start_time
-
+    return time.time() - start_time
 
 
 def insertValues(cursor, df):
@@ -47,7 +46,7 @@ def insertValues(cursor, df):
     start_time = time.time()
 
     cursor.executemany(insert_query, values)
-    return time.time()-start_time
+    return time.time() - start_time
 
 
 def updateValues(cursor, iterations):
@@ -58,22 +57,19 @@ def updateValues(cursor, iterations):
     cursor.execute(query)
     return time.time() - start_time
 
-def select(cursor, iterations):
+
+def select(cursor):
     query = f"""
     SELECT `Code du département`
     FROM elections
-    LIMIT {iterations}
+    WHERE Nom = 'Macron'
     """
     start_time = time.time()
     cursor.execute(query)
     return time.time() - start_time
 
 
-
-
-
-
-def fileBenchmark(fileName,iterations):
+def fileBenchmark(fileName, iterations):
     # Créer un curseur pour exécuter les requêtes SQL
     cursor = conn.cursor()
 
@@ -85,45 +81,49 @@ def fileBenchmark(fileName,iterations):
     df = df.astype(str)
 
     # Initialiser les listes pour stocker les temps pris pour chaque opération
-    addOnebyOne_times = []
-    addAll_times = []
-    update_times = []
-    select_times = []
+    addOnebyOne_time = 0
 
     # Benchmark pour les opérations d'ajout un par un
-    duration = 0
     for i in range(len(df)):
         row = df.iloc[i]  # Get row data
-        duration = duration + insertValue(cursor, row)
+        start_time = time.time()
+        insertValue(cursor, row)
+        addOnebyOne_time = addOnebyOne_time + time.time() - start_time
+        # Valider les changements après chaque insertion
+        conn.commit()
+
+    # Benchmark pour les opérations d'ajout collectif
+    addAll_times = insertValues(cursor, df)
+
+    # Read and process the result set from the insert operation
+    for result in cursor:
+        pass
+
+    # Benchmark pour les opérations de mise à jour
+    update_times = updateValues(cursor, iterations)
+
+    # Read and process the result set from the update operation
+    for result in cursor:
+        pass
+
+    # Benchmark pour les opérations de mise à jour
+    select_times = select(cursor)
+
+    # Read and process the result set from the select operation
+    for result in cursor:
+        pass
 
     # Valider les changements
     conn.commit()
-    addOnebyOne_times.append(duration)
 
-
-     # Benchmark pour les opérations d'ajout
-    addAll_times.append(insertValues(cursor,df))
-    conn.commit()
-
-
-    # Benchmark pour les opérations de mise à jour
-    update_times.append(updateValues(cursor,iterations))
-    conn.commit()
-
-
-
-    # Benchmark pour les opérations de mise à jour
-    select_times.append(select(cursor,iterations))
-    conn.commit()
-
-    # Fermer le curseur
+    # Fermer
     cursor.close()
 
-    return addOnebyOne_times, addAll_times, update_times, select_times
+    return addOnebyOne_time, addAll_times, update_times, select_times
 
 
 if __name__ == '__main__':
-    file_sizes = [1000]
+    file_sizes = [1000, 2000, 4000, 5000, 10000, 20000]
     add_one_by_one_times_list = []
     add_times_list = []
     update_times_list = []
@@ -131,23 +131,44 @@ if __name__ == '__main__':
 
     for size in file_sizes:
         fileName = f'../MOCK_DATA_{size}.xlsx'
-        add_one_by_one_times, add_times , update_times, select_times = fileBenchmark(fileName,size)
-        add_times_list.append(sum(add_one_by_one_times))
-        add_one_by_one_times_list.append(sum(add_one_by_one_times))
-        update_times_list.append(sum(update_times))
-        select_times_list.append(sum(select_times))
+        add_one_by_one_times, add_times, update_times, select_times = fileBenchmark(fileName, size)
+        add_times_list.append(add_times)
+        add_one_by_one_times_list.append(add_one_by_one_times)  # Summing up individual times for each iteration
+        update_times_list.append(update_times)
+        select_times_list.append(select_times)
+
+    df_times = pd.DataFrame({
+        'Taille du fichier': file_sizes,
+        'Temps Ajout un par un': add_one_by_one_times_list,
+        'Temps Ajout collectif': add_times_list,
+        'Temps Mise à jour': update_times_list,
+        'Temps Sélection': select_times_list
+    })
+
+    print("\nTemps pour chaque taille de fichier:")
+    print(df_times)
 
     # Plotting the graph
-    plt.plot(file_sizes, add_one_by_one_times_list, label='Ajout un par un ')
-    plt.plot(file_sizes, add_times_list, label='Ajout collectif')
-    plt.plot(file_sizes, update_times_list, label='Mise à jour')
-    plt.plot(file_sizes, select_times_list, label='Sélection')
+    plt.plot(file_sizes, add_one_by_one_times_list, label='Ajout un par un', marker='o')
+    plt.scatter(file_sizes, add_one_by_one_times_list, marker='o')
+
+    plt.plot(file_sizes, add_times_list, label='Ajout collectif', marker='o')
+    plt.scatter(file_sizes, add_times_list, marker='o')
+
+    plt.plot(file_sizes, update_times_list, label='Mise à jour', marker='o')
+    plt.scatter(file_sizes, update_times_list, marker='o')
+
+    plt.plot(file_sizes, select_times_list, label='Sélection', marker='o')
+    plt.scatter(file_sizes, select_times_list, marker='o')
 
     plt.xlabel('Nombre d\'éléments')
     plt.ylabel('Temps (secondes)')
     plt.title('Temps pris pour les opérations en fonction du nombre d\'éléments')
     plt.legend()
     plt.grid(True)
+
     # Enregistrer le graphique
-    plt.savefig('operations_temps.png')
+    plt.savefig('BenchmarkSQL.png')
     plt.show()
+
+
