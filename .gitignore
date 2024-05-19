@@ -1,0 +1,6 @@
+*.json
+# Environments
+.env
+.venv
+venv/
+MangoScripts/add_db.py
