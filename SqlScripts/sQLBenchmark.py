@@ -123,7 +123,7 @@ def fileBenchmark(fileName, iterations):
 
 
 if __name__ == '__main__':
-    file_sizes = [1000, 2000, 4000, 5000, 10000, 20000]
+    file_sizes = [1000, 2000, 4000, 5000, 10000, 20000, 40000, 80000]
     add_one_by_one_times_list = []
     add_times_list = []
     update_times_list = []
@@ -136,6 +136,10 @@ if __name__ == '__main__':
         add_one_by_one_times_list.append(add_one_by_one_times)  # Summing up individual times for each iteration
         update_times_list.append(update_times)
         select_times_list.append(select_times)
+
+    # Configuration de l'affichage pour voir toutes les colonnes
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
 
     df_times = pd.DataFrame({
         'Taille du fichier': file_sizes,
