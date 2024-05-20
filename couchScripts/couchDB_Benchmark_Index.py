@@ -1,4 +1,3 @@
-import json
 import time
 import pandas as pd
 import couchdb
@@ -36,9 +35,8 @@ if design_doc_id in db:
 # Save the design document to create the index
 db.save(design_doc)
 
-# Define your functions...
 
-
+# Define functions for operations
 
 def insertValues(db, df):
     start_time = time.time()
@@ -47,24 +45,35 @@ def insertValues(db, df):
     end_time = time.time()
     return end_time - start_time
 
+
 def updateValues(db, df):
-    bulk_updates = []
+    # Benchmark pour les opérations de mise à jour
+    start_time = time.time()
     for _, row in df.iterrows():
         code_du_departement = row.get('Code du département')
         if code_du_departement:
-            query_result = db.view('elections/by_code', key=code_du_departement)
-            for doc in query_result:
-                doc.value.update(row.to_dict())
-                bulk_updates.append(doc.value)
+            for doc_id in db:
+                doc = db.get(doc_id)
+                if 'Code du département' in doc and doc['Code du département'] == code_du_departement:
+                    doc['Code du département'] = code_du_departement
+                    db.save(doc)
+    end_time = time.time()
+    return end_time - start_time
+
+
+
+def select(db):
+    # Benchmark pour les opérations de sélection
     start_time = time.time()
-    db.update(bulk_updates)
+    query_result = db.find({"selector": {"Nom": "Macron"}})
+    for doc in query_result:
+        pass  # Just fetching the document
     end_time = time.time()
     return end_time - start_time
 
 
 def fileBenchmark(fileName):
-    # Load data from the JSON file
-    global nb_operations
+    # Load data from the Excel file
     df = pd.read_excel(fileName)
 
     # Benchmark for insertion operations
@@ -73,17 +82,14 @@ def fileBenchmark(fileName):
     # Benchmark for update operations
     update_times = updateValues(db, df)
 
-    # Benchmark for query operations
-    start_time = time.time()
-    # Perform query operations
-    end_time = time.time()
-    select_times = end_time - start_time
+
+    select_times = select(db)
 
     return ajout_times, update_times, select_times
 
 
 if __name__ == '__main__':
-    file_sizes = [1000]  # Add other file sizes if needed
+    file_sizes = [1000]  # Number of elements in the file
     add_times_list = []
     update_times_list = []
     select_times_list = []
@@ -98,9 +104,6 @@ if __name__ == '__main__':
     print("Number of operations:", nb_operations)
 
     # Display time for each file size
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
-
     df_times = pd.DataFrame({
         'File Size': file_sizes,
         'Insertion Time': add_times_list,
