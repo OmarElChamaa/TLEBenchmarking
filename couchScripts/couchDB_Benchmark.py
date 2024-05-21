@@ -81,7 +81,7 @@ if __name__ == '__main__':
     select_times_list = []
 
     for size in file_sizes:
-        fileName = f'../MOCK_DATA_{size}.xlsx'
+        fileName = f'../mockData/MOCK_DATA_{size}.xlsx'
         add_times, update_times, select_times = fileBenchmark(fileName)
         add_times_list.append(add_times)
         update_times_list.append(update_times)
