@@ -1,7 +1,7 @@
 import pandas as pd
 import couchdb
 
-couchdb_url = 'http://localhost:5984/'
+couchdb_url = 'http://localhost:11210/'
 database_name = 'elections-couchdb'
 username = 'admin'
 password = 'password'
@@ -21,11 +21,13 @@ try:
     # Read the Excel file
     excel_file = '../electionFrance.xlsx'
     df = pd.read_excel(excel_file, sheet_name='Sheet1')  # Adjust sheet_name as needed
-
+    docs = []
     # Insert the DataFrame rows into CouchDB
     for _, row in df.iterrows():
         doc = row.to_dict()
-        db.save(doc)
+        docs.append(doc)
+    db.update(docs)
+
 
     print(f"Data imported successfully into {database_name} database.")
 

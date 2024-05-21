@@ -152,7 +152,8 @@ if __name__ == '__main__':
     print("\nTemps pour chaque taille de fichier:")
     print(df_times)
 
-    # Plotting the graph
+    # Plotting the first graph with all lists
+    plt.figure(figsize=(10, 6))
     plt.plot(file_sizes, add_one_by_one_times_list, label='Ajout un par un', marker='o')
     plt.scatter(file_sizes, add_one_by_one_times_list, marker='o')
 
@@ -170,9 +171,24 @@ if __name__ == '__main__':
     plt.title('Temps pris pour les opérations en fonction du nombre d\'éléments')
     plt.legend()
     plt.grid(True)
-
-    # Enregistrer le graphique
-    plt.savefig('BenchmarkSQL.png')
+    plt.savefig('BenchmarkSQL_all.png')
     plt.show()
 
+    # Plotting the second graph excluding add_one_by_one_times_list
+    plt.figure(figsize=(10, 6))
+    plt.plot(file_sizes, add_times_list, label='Ajout collectif', marker='o')
+    plt.scatter(file_sizes, add_times_list, marker='o')
 
+    plt.plot(file_sizes, update_times_list, label='Mise à jour', marker='o')
+    plt.scatter(file_sizes, update_times_list, marker='o')
+
+    plt.plot(file_sizes, select_times_list, label='Sélection', marker='o')
+    plt.scatter(file_sizes, select_times_list, marker='o')
+
+    plt.xlabel('Nombre d\'éléments')
+    plt.ylabel('Temps (secondes)')
+    plt.title('Temps pris pour les opérations (excluant Ajout un par un)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('BenchmarkSQL_without_add_one_by_one.png')
+    plt.show()
