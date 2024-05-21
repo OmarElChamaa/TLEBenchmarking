@@ -18,12 +18,13 @@ else:
     db = couch.create(db_name)
 
 def insertValues(db, df):
-    start_time = time.time()
+
     docs = []
     # Insert the DataFrame rows into CouchDB
     for _, row in df.iterrows():
         doc = row.to_dict()
         docs.append(doc)
+    start_time = time.time()
     db.update(docs)
     end_time = time.time()
     return end_time - start_time
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     select_times_list = []
 
     for size in file_sizes:
-        fileName = f'../MOCK_DATA_{size}.xlsx'
+        fileName = f'../mockData/MOCK_DATA_{size}.xlsx'
         add_times, update_times, select_times = fileBenchmark(fileName,size)
         add_times_list.append(add_times)
         update_times_list.append(update_times)
