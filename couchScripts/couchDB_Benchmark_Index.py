@@ -7,22 +7,21 @@ import matplotlib.pyplot as plt
 db_name = 'elections_benchmark'
 username = 'admin'
 password = 'password'
-couch = couchdb.Server('http://localhost:5984/')
+couch = couchdb.Server('http://localhost:11210/')
 couch.resource.credentials = (username, password)
-nb_operations = 0
 
 if db_name in couch:
     db = couch[db_name]
 else:
     db = couch.create(db_name)
 
-# Define a design document with a view to index the 'Code du département' field
+# Define a design document with a view to index the 'Nom' field
 design_doc_id = '_design/elections'
 design_doc = {
     "_id": design_doc_id,
     "views": {
-        "by_code": {
-            "map": "function(doc) { if (doc['Code du département']) { emit(doc['Code du département'], doc); } }"
+        "by_nom": {
+            "map": "function(doc) { if (doc.Nom) { emit(doc.Nom, doc); } }"
         }
     }
 }
@@ -31,105 +30,94 @@ design_doc = {
 if design_doc_id in db:
     # Delete the existing design document
     del db[design_doc_id]
-
 # Save the design document to create the index
 db.save(design_doc)
 
-
 # Define functions for operations
-
 def insertValues(db, df):
+
+    docs = []
+    # Insert the DataFrame rows into CouchDB
+    for _, row in df.iterrows():
+        doc = row.to_dict()
+        docs.append(doc)
+
     start_time = time.time()
-    docs = df.to_dict(orient='records')
     db.update(docs)
     end_time = time.time()
     return end_time - start_time
 
+def updateValues(db, size):
 
-def updateValues(db, df):
-    # Benchmark pour les opérations de mise à jour
+    # Use the 'by_nom' view to find and update documents
+    query_result = db.view('elections/by_nom')
+    docs_to_update = []
+    for doc in query_result[:size]:
+        doc_value = doc['value']
+        doc_value['Nom'] = "Frey"
+        docs_to_update.append(doc_value)
     start_time = time.time()
-    for _, row in df.iterrows():
-        code_du_departement = row.get('Code du département')
-        if code_du_departement:
-            for doc_id in db:
-                doc = db.get(doc_id)
-                if 'Code du département' in doc and doc['Code du département'] == code_du_departement:
-                    doc['Code du département'] = code_du_departement
-                    db.save(doc)
+    db.update(docs_to_update)
     end_time = time.time()
     return end_time - start_time
 
-
-
-def select(db):
-    # Benchmark pour les opérations de sélection
+def selectValues(db):
     start_time = time.time()
-    query_result = db.find({"selector": {"Nom": "Macron"}})
-    for doc in query_result:
-        pass  # Just fetching the document
+    db.find({'selector': {'Nom': 'Frey'}})
     end_time = time.time()
     return end_time - start_time
 
-
-def fileBenchmark(fileName):
+def fileBenchmark(fileName, size):
     # Load data from the Excel file
     df = pd.read_excel(fileName)
-
-    # Benchmark for insertion operations
-    ajout_times = insertValues(db, df)
-
-    # Benchmark for update operations
-    update_times = updateValues(db, df)
-
-
-    select_times = select(db)
-
-    return ajout_times, update_times, select_times
-
+    insert_times = insertValues(db, df)
+    update_times = updateValues(db, size)
+    select_times = selectValues(db)
+    return insert_times, update_times, select_times
 
 if __name__ == '__main__':
-    file_sizes = [1000]  # Number of elements in the file
+    file_sizes = [1000, 2000,4000,5000,10000,20000,40000,80000]  # Add more file sizes if needed
     add_times_list = []
     update_times_list = []
     select_times_list = []
 
     for size in file_sizes:
+        print("size",size)
         fileName = f'../mockData/MOCK_DATA_{size}d.xlsx'
-        add_times, update_times, select_times = fileBenchmark(fileName)
+        add_times, update_times, select_times = fileBenchmark(fileName, size)
         add_times_list.append(add_times)
         update_times_list.append(update_times)
         select_times_list.append(select_times)
 
-    print("Number of operations:", nb_operations)
-
     # Display time for each file size
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+
     df_times = pd.DataFrame({
-        'File Size': file_sizes,
-        'Insertion Time': add_times_list,
-        'Update Time': update_times_list,
-        'Query Time': select_times_list
+        'Taille du fichier': file_sizes,
+        'Temps Ajout': add_times_list,
+        'Temps Mise à jour': update_times_list,
+        'Temps Sélection': select_times_list
     })
 
-    print("\nTime taken for each file size:")
+    print("\nTemps pour chaque taille de fichier:")
     print(df_times)
 
-    # Plotting the graph
-    plt.plot(file_sizes, add_times_list, label='Insertion', marker='o')
+    plt.plot(file_sizes, add_times_list, label='Ajout', marker='o')
     plt.scatter(file_sizes, add_times_list, marker='o')
 
-    plt.plot(file_sizes, update_times_list, label='Update', marker='o')
+    plt.plot(file_sizes, update_times_list, label='Mise à jour', marker='o')
     plt.scatter(file_sizes, update_times_list, marker='o')
 
-    plt.plot(file_sizes, select_times_list, label='Query', marker='o')
+    plt.plot(file_sizes, select_times_list, label='Sélection', marker='o')
     plt.scatter(file_sizes, select_times_list, marker='o')
 
-    plt.xlabel('Number of Elements')
-    plt.ylabel('Time (seconds)')
-    plt.title('Time taken for operations based on number of elements')
+    plt.xlabel('Nombre d\'éléments')
+    plt.ylabel('Temps (secondes)')
+    plt.title('Temps pris pour les opérations en fonction du nombre d\'éléments')
     plt.legend()
     plt.grid(True)
 
     # Save the graph
-    plt.savefig('BenchmarkCouchDB_Indexed.png')
+    plt.savefig('BenchmarkCouchDB.png')
     plt.show()
