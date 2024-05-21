@@ -14,8 +14,6 @@ if db_name in couch:
     db = couch[db_name]
 else:
     db = couch.create(db_name)
-
-# Define a design document with a view to index the 'Nom' field
 design_doc_id = '_design/elections'
 design_doc = {
     "_id": design_doc_id,
@@ -25,19 +23,13 @@ design_doc = {
         }
     }
 }
-
-# Check if the design document already exists
 if design_doc_id in db:
-    # Delete the existing design document
     del db[design_doc_id]
-# Save the design document to create the index
 db.save(design_doc)
 
-# Define functions for operations
 def insertValues(db, df):
 
     docs = []
-    # Insert the DataFrame rows into CouchDB
     for _, row in df.iterrows():
         doc = row.to_dict()
         docs.append(doc)
@@ -49,14 +41,13 @@ def insertValues(db, df):
 
 def updateValues(db, size):
 
-    # Use the 'by_nom' view to find and update documents
     query_result = db.view('elections/by_nom')
     docs_to_update = []
+    start_time = time.time()
     for doc in query_result[:size]:
         doc_value = doc['value']
         doc_value['Nom'] = "Frey"
         docs_to_update.append(doc_value)
-    start_time = time.time()
     db.update(docs_to_update)
     end_time = time.time()
     return end_time - start_time
@@ -76,7 +67,7 @@ def fileBenchmark(fileName, size):
     return insert_times, update_times, select_times
 
 if __name__ == '__main__':
-    file_sizes = [1000, 2000,4000,5000,10000,20000,40000,80000]  # Add more file sizes if needed
+    file_sizes = [1000, 2000,4000,5000,10000,20000,40000]
     add_times_list = []
     update_times_list = []
     select_times_list = []
@@ -119,5 +110,5 @@ if __name__ == '__main__':
     plt.grid(True)
 
     # Save the graph
-    plt.savefig('BenchmarkCouchDB.png')
+    plt.savefig('BenchmarkCouchDB_Index.png')
     plt.show()

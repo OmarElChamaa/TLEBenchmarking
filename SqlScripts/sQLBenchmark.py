@@ -70,50 +70,37 @@ def select(cursor):
 
 
 def fileBenchmark(fileName, iterations):
-    # Créer un curseur pour exécuter les requêtes SQL
     cursor = conn.cursor()
 
-    # Charger les données du fichier Excel
     excel_file = fileName
     df = pd.read_excel(excel_file)
 
-    # Convertir les types de données à des types Python standard
     df = df.astype(str)
 
-    # Initialiser les listes pour stocker les temps pris pour chaque opération
     addOnebyOne_time = 0
 
-    # Benchmark pour les opérations d'ajout un par un
     for i in range(len(df)):
-        row = df.iloc[i]  # Get row data
+        row = df.iloc[i]
         start_time = time.time()
         insertValue(cursor, row)
         addOnebyOne_time = addOnebyOne_time + time.time() - start_time
-        # Valider les changements après chaque insertion
         conn.commit()
 
-    # Benchmark pour les opérations d'ajout collectif
     addAll_times = insertValues(cursor, df)
 
-    # Read and process the result set from the insert operation
     for result in cursor:
         pass
 
-    # Benchmark pour les opérations de mise à jour
     update_times = updateValues(cursor, iterations)
 
-    # Read and process the result set from the update operation
     for result in cursor:
         pass
 
-    # Benchmark pour les opérations de mise à jour
     select_times = select(cursor)
 
-    # Read and process the result set from the select operation
     for result in cursor:
         pass
 
-    # Valider les changements
     conn.commit()
 
     # Fermer
@@ -133,11 +120,10 @@ if __name__ == '__main__':
         fileName = f'../mockData/MOCK_DATA_{size}.xlsx'
         add_one_by_one_times, add_times, update_times, select_times = fileBenchmark(fileName, size)
         add_times_list.append(add_times)
-        add_one_by_one_times_list.append(add_one_by_one_times)  # Summing up individual times for each iteration
+        add_one_by_one_times_list.append(add_one_by_one_times)
         update_times_list.append(update_times)
         select_times_list.append(select_times)
 
-    # Configuration de l'affichage pour voir toutes les colonnes
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
 
@@ -174,7 +160,6 @@ if __name__ == '__main__':
     plt.savefig('BenchmarkSQL_all.png')
     plt.show()
 
-    # Plotting the second graph excluding add_one_by_one_times_list
     plt.figure(figsize=(10, 6))
     plt.plot(file_sizes, add_times_list, label='Ajout collectif', marker='o')
     plt.scatter(file_sizes, add_times_list, marker='o')

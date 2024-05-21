@@ -19,7 +19,6 @@ else:
 
 def insertValues(db, df):
     docs = []
-    # Insert the DataFrame rows into CouchDB
     for _, row in df.iterrows():
         doc = row.to_dict()
         docs.append(doc)
@@ -31,9 +30,9 @@ def insertValues(db, df):
 
 def updateValues(db, size):
     docs = [db[doc.id] for doc in db.view('_all_docs', limit=size)]
+    start_time = time.time()
     for doc in docs:
         doc['Nom'] = "Frey"
-    start_time = time.time()
     db.update(docs)
     end_time = time.time()
     return end_time - start_time
@@ -57,7 +56,7 @@ def fileBenchmark(fileName, size):
 
 
 if __name__ == '__main__':
-    file_sizes = [1000, 2000, 4000, 5000, 10000, 20000, 40000, 80000]
+    file_sizes = [1000, 2000, 4000, 5000, 10000, 20000, 40000]
     add_times_list = []
     update_times_list = []
     select_times_list = []
