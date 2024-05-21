@@ -16,7 +16,7 @@
 2. **CouchDB** :
    ```
    docker pull couchdb:latest
-   docker run -d --name elections-couchdb -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=password -p 5984:5984 couchdb:latest
+   docker run -d --name elections-couchdb -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=password -p 11210:5984 couchdb:latest
    ```
 
 #### Préparation de la base de données :
@@ -25,9 +25,9 @@
 
 #### Lancer un benchmark :
 
-2. Exécuter le script **Benchmark.py** avec le nombre d'itérations souhaité comme argument.
+2. Exécuter le script **xBenchmark.py** et attendez.
    ```
-   python Benchmark.py <nombre_iterations>
+   python xBenchmark.py
    ```
 
 ---
