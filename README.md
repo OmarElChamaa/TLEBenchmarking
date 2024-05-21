@@ -1,35 +1,35 @@
-# TLEBenchmarking
+### TLEBenchmarking
 
-DB used :
- https://www.data.gouv.fr/fr/datasets/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-2nd-tour/
-Download Format : Xlsx
+#### Utilisation de la base de données :
 
-Benchmarking Data : https://docs.google.com/spreadsheets/d/1jEePfGDo952euuNExDNVvgm3AfDgxZLdvHcJ7oRnYdc/edit#gid=0
+- **Base de données utilisée** : MySQL et CouchDB
+- **Données** : [Résultats de l'élection présidentielle du 10 et 24 avril 2022](https://www.data.gouv.fr/fr/datasets/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-2nd-tour/) au format Xlsx.
 
-Create docker and db
-```
- docker pull mysql:latest
-docker run --name elections-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=elections_benchmark -p 10101:3306 -d mysql:latest
-```
+#### Configuration Docker et bases de données :
 
-Create couch and db
-```
-  docker pull couchdb:latest
-docker run -d --name elections-couchdb -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=password -p 5984:5984 couchdb:latest
+1. **MySQL** :
+   ```
+   docker pull mysql:latest
+   docker run --name elections-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=elections_benchmark -p 10101:3306 -d mysql:latest
+   ```
 
+2. **CouchDB** :
+   ```
+   docker pull couchdb:latest
+   docker run -d --name elections-couchdb -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=password -p 5984:5984 couchdb:latest
+   ```
 
-```
+#### Préparation de la base de données :
 
+1. Exécuter le script **add.py** pour ajouter et préparer la base de données.
 
+#### Lancer un benchmark :
 
-Pour ajouter et preparer une base de donnees :
-```
-    python **add**.py
-```
+2. Exécuter le script **Benchmark.py** avec le nombre d'itérations souhaité comme argument.
+   ```
+   python Benchmark.py <nombre_iterations>
+   ```
 
+---
 
-Pour lancer un benchmark :
-```
-    python **Benchmark**.py <nombre_iterations>
-```
-
+*Assurez-vous d'avoir installé Docker sur votre système pour exécuter les conteneurs. Les scripts **add.py** et **Benchmark.py** nécessitent Python installé sur votre machine.*
